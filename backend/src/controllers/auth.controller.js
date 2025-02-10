@@ -8,6 +8,9 @@ export const signupController = async (req, res) => {
     const { fullName, email, password } = req.body
 
     try {
+        if (!fullName || !email || !password) {
+            return res.status(400).json({ message: "Por favor preencha todos os campos necessários." })
+        }
         if (password.length < 6) {
             return res.status(400).json({ message: "A senha precisa ter no mínimo 6 caracteres." })
         }
@@ -45,14 +48,55 @@ export const signupController = async (req, res) => {
 
     } catch (error) {
         console.log("Error in signup controller", error.message)
-        res.status(500).json({message: "Internal Server Error."})
+        res.status(500).json({ message: "Internal Server Error." })
     }
 }
 
-export const loginController = (req, res) => {
-    res.send("login page")
+export const loginController = async (req, res) => {
+    const { email, password } = req.body
+
+    try {
+        if (!email || !password) {
+            return res.status(400).json({ message: "Por favor preencha todos os campos necessários" })
+        }
+
+        const user = await User.findOne({ email })
+
+        if (!user) {
+            return res.status(400).json({ message: "Conta não encontrada. Verifique os dados o tente novamente." })
+        }
+
+        const isPasswordCorrect = await bcrypt.compare(password, user.password)
+
+        if (!isPasswordCorrect) {
+            return res.status(400).json({ message: "Senha incorreta." })
+        }
+
+        generateToken(user._id, res)
+
+        res.status(200).json({
+            _id: user._id,
+            fullName: user.fullName,
+            email: user.email,
+            profilePic: user.profilePick
+        })
+
+    } catch (error) {
+        console.log("Internal server error", error.message)
+        res.send(500).json({ message: "Internal server error. :(" })
+    }
 }
 
 export const logoutController = (req, res) => {
-    res.send("logout page")
+    try {
+        res.cookie("jwt", "", { maxAge: 0 })
+        res.status(200).json({ message: "Logado com sucesso!" })
+    } catch (error) {
+        console.log("Internal server error", error.message)
+        res.send(500).json({ message: "Internal server error. :(" })
+    }
+}
+
+export const updateProfileControlle = async (req, res) => {
+
 }
