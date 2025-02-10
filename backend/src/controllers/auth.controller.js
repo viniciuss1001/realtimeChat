@@ -2,6 +2,7 @@
 import { generateToken } from '../lib/utils.js'
 import User from '../models/user.model.js'
 import bcrypt from 'bcryptjs'
+import cloudinary from '../lib/cloudnary.js'
 
 export const signupController = async (req, res) => {
 
@@ -98,5 +99,33 @@ export const logoutController = (req, res) => {
 }
 
 export const updateProfileControlle = async (req, res) => {
+    try {
+        const { profilePic } = req.body
+        const userId = req.user._id
 
+        if(!profilePic){
+            return res.status(400).message({message: "Imagem de perfil não encontrada."})
+        }
+
+        const uploadResponse = await cloudinary.uploader.upload(profilePic)
+
+        const userUpdade = await User.findByIdAndUpdate(userId, {
+            profilePick:uploadResponse.secure_url
+        },{new: true})
+
+        res.status(200).json(userUpdade)
+
+    } catch (error) {
+        console.log("erro ao atualizar usuário.")
+        res.status(500).json({message: "Internal server error"})
+    }
+}
+
+export const checkAuth = (req, res) => {
+    try {
+        res.status(200).json(req.user)
+    } catch (error) {
+        console.log("error in checkAuth", error.message)
+        res.status(500).json({message: "Internal error message."})
+    }
 }
