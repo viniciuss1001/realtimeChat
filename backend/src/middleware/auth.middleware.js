@@ -1,4 +1,4 @@
-import jwt, { decode } from 'jsonwebtoken'
+import jwt from 'jsonwebtoken'
 import User from '../models/user.model.js'
 
 export const protectedRoute = async (req, res, next) => {
@@ -15,7 +15,7 @@ export const protectedRoute = async (req, res, next) => {
             return res.status(401).json({message: "Acesso não autorizado. "})
         }
 
-        const user = await User.findById(decode.userId).select("-password")
+        const user = await User.findById(decoded.userId).select("-password")
 
         if(!user){
             return res.status(404).json({message: "Usuário não encontrado."})
